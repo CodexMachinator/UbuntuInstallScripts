@@ -1,2 +1,5 @@
 # UbuntuInstallScripts
-Convert a fresh Ubuntu Install into a configured and working desktop environment
+
+# Focal
+wget --no-check-certificate --content-disposition https://github.com/CodexMachinator/UbuntuInstallScripts/Focal/archive/refs/tags/1.0.tar.gz
+
