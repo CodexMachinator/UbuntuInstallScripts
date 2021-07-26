@@ -1,6 +1,24 @@
 #!/bin/bash
 
-sudo apt install dconf-editor gnome-shell-extensions gnome-tweak-tool -y
+sudo apt install mesa-utils -y
+printf "\nVerify current video settings:\n"
+glxinfo | egrep "OpenGL vendor|OpenGL renderer|OpenGL core profile version string*"
+printf "\n"
+
+read -p "Do you wish to use the current graphic settings and continue the update? [Y|N]" -n 1 -r
+echo    # move to a new line
+if [[ ! $REPLY =~ ^[Yy]$ ]] ; then
+	exit 1
+else
+	printf "continuing...\n"
+fi
+
+# Update installed packages
+sudo apt install dconf-editor gnome-shell-extensions gnome-tweak-tool wget -y
+sudo apt-get update -y
+sudo apt-get autoremove -y && sudo apt-get autoclean -y
+sudo apt-get upgrade -y
+sudo apt-get autoremove -y && sudo apt-get autoclean -y
 
 # enable gnome extensions
 gsettings set org.gnome.shell disable-user-extensions false
@@ -9,6 +27,9 @@ gsettings set org.gnome.shell disable-user-extensions false
 gsettings set org.gnome.shell enabled-extensions "['user-theme@gnome-shell-extensions.gcampax.github.com']"
 gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
 gsettings set org.gnome.shell.extensions.user-theme name 'Yaru-dark'
+
+# Set list view in file browser
+gsettings set org.gnome.nautilus.preferences default-folder-viewer 'list-view'
 
 # set gedit preferences
 gsettings set org.gnome.gedit.preferences.editor highlight-current-line false
@@ -27,9 +48,11 @@ gsettings set org.gnome.shell.extensions.desktop-icons show-trash false
 gsettings set org.gnome.shell.extensions.desktop-icons show-home false
 gsettings set org.gnome.shell.extensions.dash-to-dock show-trash true
 
-# Set Dock on left side and minimize on launcher click
+# Set up Dock behaviors
 gsettings set org.gnome.shell.extensions.dash-to-dock dock-position 'LEFT'
 gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize-or-previews'
+gsettings set org.gnome.shell.extensions.dash-to-dock isolate-workspaces true
+gsettings set org.gnome.shell.extensions.dash-to-dock isolate-monitors true
 
 # remove show applications buttion
 #gsettings set org.gnome.shell.extensions.dash-to-dock show-show-apps-button false
@@ -42,7 +65,7 @@ gsettings set org.gnome.desktop.privacy remember-app-usage false
 # Change Favorites in the Dock
 
 if   [[ $(lsb_release -sc) = "focal" ]] ; then
-	gsettings set org.gnome.shell favorite-apps "['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'firefox.desktop', 'thunderbird.desktop', 'libreoffice-startcenter.desktop', 'org.gnome.gedit.desktop']"
+	gsettings set org.gnome.shell favorite-apps "['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'firefox.desktop', 'thunderbird.desktop', 'libreoffice-startcenter.desktop', 'org.gnome.gedit.desktop', 'gnome-control-center.desktop']"
 fi
 
 # add code folder and bookmark it
@@ -50,7 +73,6 @@ mkdir -p ~/Code
 echo "file:///home/$USER/Code" > $HOME/.config/gtk-3.0/bookmarks
 
 ### Not supported in Ubuntu 20.04
-
 # Bring Out Submenu Of Power Off/Logout Button
 #gsettings set com.canonical.indicator.session suppress-logout-menuitem false
 #gsettings set com.canonical.indicator.session suppress-logout-restart-shutdown true
@@ -79,13 +101,15 @@ if   [[ $(lsb_release -sc) = "focal" ]] ; then
 	sudo apt remove popularity-contest -y
 fi
 
-gsettings set com.ubuntu.update-notifier regular-auto-launch-interval 180
+gsettings set com.ubuntu.update-notifier regular-auto-launch-interval 14
 
 
 # Remove periodic software updates and checks
 if   [[ $(lsb_release -sc) = "focal" ]] ; then
 
 	file='/etc/apt/apt.conf.d/10periodic'
+	search='Enable'; replace='APT::Periodic::Enable "0";'
+	if grep -q $search $file; then sudo sed -i "/$search/c\\$replace" $file; else sudo bash -c "echo '$replace' >> '$file'"; fi
 	search='Update-Package-Lists'; replace='APT::Periodic::Update-Package-Lists "0";'
 	if grep -q $search $file; then sudo sed -i "/$search/c\\$replace" $file; else sudo bash -c "echo '$replace' >> '$file'"; fi
 	search='Download-Upgradeable-Packages'; replace='APT::Periodic::Download-Upgradeable-Packages "0";'
@@ -96,6 +120,8 @@ if   [[ $(lsb_release -sc) = "focal" ]] ; then
 	if grep -q $search $file; then sudo sed -i "/$search/c\\$replace" $file; else sudo bash -c "echo '$replace' >> '$file'"; fi
 
 	file='/etc/apt/apt.conf.d/20auto-upgrades'
+	search='Enable'; replace='APT::Periodic::Enable "0";'
+	if grep -q $search $file; then sudo sed -i "/$search/c\\$replace" $file; else sudo bash -c "echo '$replace' >> '$file'"; fi
 	search='Update-Package-Lists'; replace='APT::Periodic::Update-Package-Lists "0";'
 	if grep -q $search $file; then sudo sed -i "/$search/c\\$replace" $file; else sudo bash -c "echo '$replace' >> '$file'"; fi
 	search='Download-Upgradeable-Packages'; replace='APT::Periodic::Download-Upgradeable-Packages "0";'
@@ -113,19 +139,21 @@ fi
 
 unset file search replace
 
+# Set up bash dot files
+#git clone git@github.com:CodexMachinator/dotfiles.git $HOME/.dotfiles
+wget -O $HOME/Downloads/dotfiles-1.0.tar.gz --no-check-certificate --content-disposition https://github.com/CodexMachinator/dotfiles/archive/refs/tags/v1.0.tar.gz
+mkdir -p $HOME/.dotfiles
+tar -xf $HOME/Downloads/dotfiles-1.0.tar.gz -C $HOME/.dotfiles --strip-components=1
+rm $HOME/Downloads/dotfiles-1.0.tar.gz
+$HOME/.dotfiles/makeLink.sh
+
 # use to identify other settings to add to script
 # dconf watch /
-
-
-sudo apt-get update -y
-sudo apt-get autoremove -y && sudo apt-get autoclean -y
-sudo apt-get upgrade -y
-sudo apt-get autoremove -y && sudo apt-get autoclean -y
 
 # Delete history of script
 sudo cat /dev/null > ~/.bash_history && history -c
 
 # Restart after script
-echo "\n\nAbout to Reboot\n\n"
+printf "\n\nRebooting 5 seconds\n\n\n"
 sleep 5
 sudo reboot
