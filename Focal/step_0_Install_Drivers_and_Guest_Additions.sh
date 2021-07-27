@@ -29,6 +29,12 @@ rm $HOME/Downloads/broadcom-bt-firmware-10.1.0.1115.deb
 #lspci -nnk | grep -iA2 net
 
 
+### TODO configure power management for so that computer will wake from suspend
+# already updated bios for ASPM ( still doesn't work )
+# try updating to 465 or 470 https://forums.developer.nvidia.com/t/ubuntu-20-04-with-nvidia-460-driver-freezes-randomly-after-resume-from-suspend-hibernate/173818/16
+# try https://download.nvidia.com/XFree86/Linux-x86_64/460.39/README/powermanagement.html
+# used ideas from https://askubuntu.com/questions/1298198/ubuntu-20-04-doesnt-wake-up-after-suspend
+
 ### For running in VirtualBox VM only
 
 ### Manual tasks

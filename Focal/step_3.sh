@@ -22,6 +22,8 @@ sudo chown root:root /usr/bin/apt-mirror && sudo chmod 755 /usr/bin/apt-mirror
 sudo cp $HOME/Downloads/apt-mirror-fork/postmirror.sh /media/mike/seagate500/repos/var/
 sudo chmod 755 /media/mike/seagate500/repos/var/postmirror.sh 
 
+### TODO add wget script to get missing 48x48 icon tar files or used a supported mirroring utility like debmirror or aptly
+
 #
 sudo apt install tree vim parallel htop -y
 
